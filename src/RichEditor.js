@@ -1,13 +1,33 @@
-import React, {Component} from 'react';
+import React, {Component, forwardRef} from 'react';
 import {WebView} from 'react-native-webview';
 import {actions, messages} from './const';
-import {Keyboard, Platform, StyleSheet, TextInput, View} from 'react-native';
+import {Keyboard, Platform, StyleSheet, TextInput as RNTextInput, View} from 'react-native';
 import {createHTML} from './editor';
 
 const PlatformIOS = Platform.OS === 'ios';
 
-export default class RichTextEditor extends Component {
+const withHOC = WrappedComponent =>
+    forwardRef((props, ref) => {
+        return (
+            <WrappedComponent
+                ref={ref}
+                selectionColor="#0096FFFF"
+                placeholderTextColor="#CCCFD1FF"
+                underlineColorAndroid={'transparent'}
+                {...props}
+                style={{
+                    padding: 0,
+                    fontSize: 16,
+                    color: '#000E18FF',
+                    borderBottomColor: 'transparent',
+                    ...props.style,
+                }}
+            />
+        );
+    });
 
+const TextInput = withHOC(RNTextInput);
+export default class RichTextEditor extends Component {
     static defaultProps = {
         contentInset: {},
         style: {},
@@ -41,7 +61,15 @@ export default class RichTextEditor extends Component {
         that.layout = {};
         that.selectionChangeListeners = [];
         const {
-            editorStyle: {backgroundColor, color, placeholderColor, initialCSSText, cssText, contentCSSText, caretColor} = {},
+            editorStyle: {
+                backgroundColor,
+                color,
+                placeholderColor,
+                initialCSSText,
+                cssText,
+                contentCSSText,
+                caretColor,
+            } = {},
             html,
             pasteAsPlainText,
             onPaste,
@@ -136,7 +164,8 @@ export default class RichTextEditor extends Component {
 
     onMessage(event) {
         const that = this;
-        const {onFocus, onBlur, onChange, onPaste, onKeyUp, onKeyDown, onInput, onMessage, onCursorPosition} = that.props;
+        const {onFocus, onBlur, onChange, onPaste, onKeyUp, onKeyDown, onInput, onMessage, onCursorPosition} =
+            that.props;
         try {
             const message = JSON.parse(event.nativeEvent.data);
             const data = message.data;
@@ -227,14 +256,14 @@ export default class RichTextEditor extends Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        const {editorStyle, disabled,placeholder} = this.props;
+        const {editorStyle, disabled, placeholder} = this.props;
         if (prevProps.editorStyle !== editorStyle) {
             editorStyle && this.setContentStyle(editorStyle);
         }
         if (disabled !== prevProps.disabled) {
             this.setDisable(disabled);
         }
-        if(placeholder!== prevProps.placeholder){
+        if (placeholder !== prevProps.placeholder) {
             this.setPlaceholder(placeholder);
         }
     }
@@ -461,6 +490,6 @@ const styles = StyleSheet.create({
     },
 
     webview: {
-        backgroundColor: "transparent"
-    }
+        backgroundColor: 'transparent',
+    },
 });
